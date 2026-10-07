@@ -1,0 +1,17 @@
+bluetooth:
+  name: Stick-S3 Clicker
+display:
+  brightness: 64
+gestures:
+  debounce_ms: 25
+  double_click_ms: 250
+  long_press_ms: 650
+buttons:
+  main:
+    single: RIGHT
+    double: null
+    long: null
+  secondary:
+    single: LEFT
+    double: null
+    long: ESC

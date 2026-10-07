@@ -1,0 +1,31 @@
+# PlatformIO build outputs and downloaded dependencies
+.pio/
+.pioenvs/
+.piolibdeps/
+
+# Generated firmware configuration (config.yaml remains tracked)
+include/generated_config.h
+
+# Local Python environments and caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Editor and operating-system metadata
+.vscode/
+.idea/
+.DS_Store
+._*
+Thumbs.db
+*.swp
+*.swo
+
+# Local diagnostics and temporary files
+*.log
+*.tmp
