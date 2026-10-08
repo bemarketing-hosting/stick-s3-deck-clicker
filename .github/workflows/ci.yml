@@ -25,6 +25,8 @@ jobs:
         run: |
           python -m venv .venv
           .venv/bin/python -m pip install -r requirements.txt
+      - name: Build firmware and install its pinned image validation tools
+        run: .venv/bin/pio run -e sticks3
       - name: Test configuration, packaging, gestures, and BLE
         run: |
           .venv/bin/python -m unittest discover -s tests -v
@@ -32,9 +34,8 @@ jobs:
           /tmp/sticks3-gesture-tests
           c++ -std=c++17 -Wall -Wextra -Werror -Itests/ble -Iinclude tests/test_ble.cpp src/BleKeyboard.cpp -o /tmp/sticks3-ble-tests
           /tmp/sticks3-ble-tests
-      - name: Build and package firmware
+      - name: Package firmware
         run: |
-          .venv/bin/pio run -e sticks3
           .venv/bin/python scripts/package_firmware.py --version 0.0.0-dev --output web/public/firmware
       - name: Test and build website
         working-directory: web
