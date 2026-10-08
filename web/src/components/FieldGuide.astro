@@ -1,0 +1,132 @@
+---
+import { product } from "../product";
+import { keyLabel, type Release } from "../release";
+interface Props {
+  release: Release | null;
+}
+const { release } = Astro.props;
+const gestures = [
+  ["single", "TAP"],
+  ["double", "DOUBLE TAP"],
+  ["long", "HOLD"],
+] as const;
+---
+
+<section class="guide-grid" aria-label="Presentation field guide">
+  <article class="panel guide-panel">
+    <div class="panel-heading">
+      <h2>02 / KNOW YOUR CONTROLS</h2><span class="small-tag">INPUT</span>
+    </div>
+    {
+      release ? (
+        <>
+          <>
+            <table class="mapping-table">
+              <>
+                <thead>
+                  <tr>
+                    <>
+                      <th>GESTURE</th>
+                      <th>MAIN / A</th>
+                      <th>SIDE / B</th>
+                    </>
+                  </tr>
+                </thead>
+                <tbody>
+                  {gestures.map(([key, label]) => (
+                    <tr>
+                      <th>
+                        {label}
+                        {key === "long" && (
+                          <small>
+                            {release.config.gestures.long_press_ms} ms
+                          </small>
+                        )}
+                      </th>
+                      <td>{keyLabel(release.config.buttons.main[key])}</td>
+                      <td>{keyLabel(release.config.buttons.secondary[key])}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </>
+            </table>
+            <p class="micro-copy">
+              Mappings belong to this firmware build. A configured hold fires
+              once and suppresses the tap on release. Unassigned holds act as
+              taps; unassigned double taps send two taps.
+            </p>
+          </>
+        </>
+      ) : (
+        <p class="muted body-copy">
+          Button mappings appear here when a firmware package is available.
+        </p>
+      )
+    }
+    <p class="micro-copy">
+      The separate reset/power button is not a presentation control.
+    </p>
+  </article>
+  <article class="panel guide-panel">
+    <div class="panel-heading">
+      <h2>03 / PAIR & PRESENT</h2><span class="small-tag">BLE</span>
+    </div>
+    <ol class="steps">
+      <li>
+        <span
+          >Power on your clicker and open your computer’s Bluetooth settings.</span>
+      </li><li>
+        <span
+          >Pair with <strong
+            >{
+              release?.config.bluetooth.name ??
+                "the Bluetooth name shown on the device"
+            }</strong
+          >. It appears as a keyboard.</span>
+      </li><li>
+        <span
+          >Wait for the clicker to report ready. Focus your presentation window
+          and enter slideshow mode.</span>
+      </li>
+    </ol>
+    <p class="micro-copy">
+      Rehearse with your actual deck. Input while disconnected is discarded, so
+      old clicks never play back after reconnecting.
+    </p>
+  </article>
+  <article class="panel guide-panel recovery-panel">
+    <div class="panel-heading">
+      <h2>04 / RECOVER THE SIGNAL</h2><span class="small-tag">HELP</span>
+    </div>
+    <details>
+      <summary>Device doesn’t appear?</summary><p>
+        Use a USB data cable, try another USB port, and close serial monitors or
+        other tabs using the device. Select the Stick-S3 in the browser’s USB
+        chooser.
+      </p>
+    </details>
+    <details>
+      <summary>Connection or installation failed?</summary><p>
+        Reconnect USB. Hold the side reset button until the internal green LED
+        flashes to enter download mode. The port may change; connect again and
+        retry. <a href={product.hardwareGuide}
+          >Official Stick-S3 recovery guide ↗</a>
+      </p>
+    </details>
+    <details>
+      <summary>Bluetooth won’t reconnect?</summary><p>
+        Hold both application buttons during startup for three seconds and
+        follow the on-screen progress to clear saved bonds. Forget the device in
+        your computer’s Bluetooth settings, then pair again.
+      </p>
+    </details>
+    <details>
+      <summary>Need different button mappings?</summary><p>
+        Mappings are compiled into the firmware. Edit <code>config.yaml</code> in
+        the repository and rebuild. This installer uses the configuration shown on
+        this page. <a href={`${product.repository}#customize-with-yaml`}
+          >Configuration instructions ↗</a>
+      </p>
+    </details>
+  </article>
+</section>

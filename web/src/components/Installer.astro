@@ -1,0 +1,92 @@
+---
+import { product } from "../product";
+import type { Release } from "../release";
+interface Props {
+  release: Release | null;
+}
+const { release } = Astro.props;
+const available = !!release;
+---
+
+<section
+  class="installer panel"
+  id="install"
+  aria-labelledby="install-heading"
+  data-flasher
+  data-manifest={`${import.meta.env.BASE_URL}${product.manifestPath}`}
+  data-expected-version={release?.version}
+  data-expected-commit={release?.commit}
+  data-expected-config-sha256={release?.configSha256}
+>
+  <div class="panel-heading">
+    <h2 id="install-heading">01 / INSTALL FIRMWARE</h2><span class="small-tag"
+      >USB–C</span>
+  </div>
+  <p class="install-intro">Plug in. Flash. Present.</p>
+  <p class="muted body-copy">
+    Connect your Stick-S3 with a USB data cable. Use a desktop browser with Web
+    Serial support, such as Chrome or Edge.
+  </p>
+  <div class="connection-status">
+    <span class="status-dot" aria-hidden="true"></span><span
+      data-status
+      role="status"
+      aria-live="polite"
+      >{
+        available
+          ? "Checking browser support…"
+          : "Firmware package unavailable in this local preview."
+      }</span>
+  </div>
+  <div class="device-readout">
+    <span>DEVICE</span><span data-device>Not connected</span>
+  </div>
+  <label class="check-row"
+    ><input type="checkbox" data-confirm /><span
+      >I have an <strong>M5Stack Stick-S3</strong> (ESP32-S3).</span
+    ></label
+  >
+  <button class="primary-button" data-connect disabled={!available}
+    ><span>CONNECT DEVICE</span><span aria-hidden="true">↗</span></button
+  >
+  <div class="install-actions">
+    <button data-install disabled>INSTALL FIRMWARE</button><button
+      class="subtle-button"
+      data-disconnect
+      disabled>DISCONNECT</button>
+  </div>
+  <progress
+    data-progress
+    value="0"
+    max="100"
+    aria-label="Firmware installation progress"></progress>
+  <p class="micro-copy">
+    Your browser connects directly to the device. Keep this tab open and the
+    cable connected while flashing.
+  </p>
+  <details class="advanced">
+    <summary>ADVANCED / INSTALL OPTIONS</summary><label class="check-row"
+      ><input type="checkbox" data-erase /><span
+        >Erase all flash before installing. This removes saved Bluetooth
+        pairings and device data.</span
+      ></label
+    ><p class="micro-copy">Leave unchecked for a normal update.</p>
+  </details>
+  <details class="advanced">
+    <summary>CONNECTION LOG</summary><pre
+      data-log
+      aria-label="Connection log">Waiting for a connection.</pre>
+  </details>
+  <noscript
+    ><p class="error-message">
+      JavaScript is required to connect over USB. Enable it, or use the
+      command-line instructions in the project README.
+    </p></noscript
+  >
+</section>
+<script>
+  import { initializeFlasher } from "../lib/flasher";
+  document.querySelectorAll<HTMLElement>("[data-flasher]").forEach((root) => {
+    initializeFlasher(root, root.dataset.manifest!);
+  });
+</script>
