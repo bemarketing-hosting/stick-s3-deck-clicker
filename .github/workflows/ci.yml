@@ -1,0 +1,47 @@
+name: Validate firmware and web flasher
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install firmware tools
+        run: |
+          python -m venv .venv
+          .venv/bin/python -m pip install -r requirements.txt
+      - name: Test configuration, packaging, gestures, and BLE
+        run: |
+          .venv/bin/python -m unittest discover -s tests -v
+          c++ -std=c++11 -Wall -Wextra -Werror -Iinclude tests/test_gesture.cpp -o /tmp/sticks3-gesture-tests
+          /tmp/sticks3-gesture-tests
+          c++ -std=c++17 -Wall -Wextra -Werror -Itests/ble -Iinclude tests/test_ble.cpp src/BleKeyboard.cpp -o /tmp/sticks3-ble-tests
+          /tmp/sticks3-ble-tests
+      - name: Build and package firmware
+        run: |
+          .venv/bin/pio run -e sticks3
+          .venv/bin/python scripts/package_firmware.py --version 0.0.0-dev --output web/public/firmware
+      - name: Test and build website
+        working-directory: web
+        env:
+          BASE_PATH: /stick-s3-deck-clicker/
+        run: |
+          npm ci
+          npm run check
+          npm test
+          npm run build
