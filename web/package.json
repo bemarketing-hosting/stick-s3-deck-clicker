@@ -1,0 +1,27 @@
+{
+  "name": "stick-s3-web-flasher",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "tsx scripts/check-firmware.ts && astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "test": "tsx --test tests/*.test.ts"
+  },
+  "dependencies": {
+    "@noble/hashes": "2.4.0",
+    "astro": "7.3.8",
+    "esptool-js": "0.7.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.10",
+    "@types/node": "22.20.5",
+    "@types/w3c-web-serial": "1.0.8",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3"
+  }
+}

@@ -1,0 +1,107 @@
+name: Publish stable firmware and Pages
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Existing stable version tag to publish (v1.0.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-stable-pages
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: read
+    steps:
+      - name: Validate existing tag and reject published releases
+        uses: actions/github-script@v7
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        with:
+          script: |
+            const tag = process.env.RELEASE_VERSION;
+            if (!/^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(tag)) {
+              throw new Error('Choose an existing stable vX.Y.Z tag.');
+            }
+            await github.rest.git.getRef({ ...context.repo, ref: `tags/${tag}` });
+            try {
+              await github.rest.repos.getReleaseByTag({ ...context.repo, tag });
+            } catch (error) {
+              if (error.status === 404) return;
+              throw error;
+            }
+            throw new Error('This tag already has a release. Publish a new version instead.');
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.version }}
+      - name: Validate Pages configuration
+        uses: actions/configure-pages@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install firmware tools
+        run: |
+          python -m venv .venv
+          .venv/bin/python -m pip install -r requirements.txt
+      - name: Build firmware once and install its pinned image validation tools
+        run: .venv/bin/pio run -e sticks3
+      - name: Test firmware and packaging
+        run: |
+          .venv/bin/python -m unittest discover -s tests -v
+          c++ -std=c++11 -Wall -Wextra -Werror -Iinclude tests/test_gesture.cpp -o /tmp/sticks3-gesture-tests
+          /tmp/sticks3-gesture-tests
+          c++ -std=c++17 -Wall -Wextra -Werror -Itests/ble -Iinclude tests/test_ble.cpp src/BleKeyboard.cpp -o /tmp/sticks3-ble-tests
+          /tmp/sticks3-ble-tests
+      - name: Package the validated firmware build
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          .venv/bin/python scripts/package_firmware.py --version "$RELEASE_VERSION" --output web/public/firmware
+      - name: Build website with the release bundle
+        working-directory: web
+        env:
+          BASE_PATH: /stick-s3-deck-clicker/
+        run: |
+          npm ci
+          npm run check
+          npm test
+          npm run build
+      - name: Stage Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: web/dist
+      - name: Publish the same firmware bundle on GitHub Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          gh release create "$RELEASE_VERSION" web/public/firmware/manifest.json web/public/firmware/*.bin --verify-tag --latest --title "Stick-S3 Clicker $RELEASE_VERSION" --generate-notes
+
+  deploy:
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy the validated release website
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,113 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+import DevicePlate from "../components/DevicePlate.astro";
+import Installer from "../components/Installer.astro";
+import FieldGuide from "../components/FieldGuide.astro";
+import { readRelease } from "../release";
+const release = readRelease();
+---
+
+<SiteLayout>
+  <section class="intro" aria-labelledby="page-title">
+    <div>
+      <p class="eyebrow">
+        <span class="orange-square" aria-hidden="true"></span> FIRMWARE DEPLOYMENT
+        / WEB SERIAL
+      </p><h1 id="page-title">Your slides.<br />Your signal.</h1>
+    </div>
+    <div class="intro-aside">
+      <p>
+        A small instrument for a clear delivery.<br />Turn your Stick-S3 into a
+        Bluetooth<br class="desktop-break" /> presentation clicker. No app required.
+      </p><span class="small-tag">M5STACK STICK–S3 ONLY</span>
+    </div>
+  </section>
+  <div class="workbench">
+    <aside class="index-rail" aria-label="Page index">
+      <p class="eyebrow">FIELD INDEX</p><a class="active" href="#install"
+        ><span>01</span> INSTALL</a
+      ><a href="#field-guide"><span>02</span> OPERATE</a><div class="rail-rule">
+      </div><span class="rail-label">CONNECTION</span><span>USB–C → BLE</span
+      ><span class="rail-label">TARGET</span><span>ESP32–S3</span><div
+        class="rail-glyph"
+        aria-hidden="true"
+      >
+        ⊕
+      </div><p class="micro-copy">ONE PURPOSE.<br />EVERY SLIDE.</p>
+    </aside>
+    <DevicePlate version={release?.version ?? "PREVIEW"} />
+    <Installer release={release} />
+  </div>
+  <section class="release-strip" aria-label="Firmware release information">
+    <div>
+      <span class="rail-label">FIRMWARE</span><strong
+        >{release?.version ?? "Not packaged"}</strong>
+    </div>
+    <div>
+      <span class="rail-label">SOURCE COMMIT</span>{
+        release ? (
+          <code title={release.commit}>{release.commit.slice(0, 12)}</code>
+        ) : (
+          <span>—</span>
+        )
+      }
+    </div>
+    <div>
+      <span class="rail-label">CONFIG SHA256</span>{
+        release ? (
+          <code title={release.configSha256}>
+            {release.configSha256.slice(0, 16)}…
+          </code>
+        ) : (
+          <span>—</span>
+        )
+      }
+    </div>
+    <div>
+      <span class="rail-label">FLASH TARGET</span><span
+        >{release?.chipFamily ?? "ESP32-S3"} / 8 MB</span>
+    </div>
+  </section>
+  {
+    release && (
+      <details class="firmware-downloads">
+        <summary>FIRMWARE FILES & CHECKSUMS</summary>
+        <p class="micro-copy">
+          For command-line installation and verification. Each image must be
+          written at its listed offset.
+        </p>
+        <a
+          class="manifest-download"
+          href={`${import.meta.env.BASE_URL}firmware/manifest.json`}
+          download
+        >
+          Download release manifest ↓
+        </a>
+        <ul>
+          {release.parts.map((part) => (
+            <li>
+              <div>
+                <a
+                  href={`${import.meta.env.BASE_URL}firmware/${part.path}`}
+                  download
+                >
+                  {part.path} ↓
+                </a>
+                <span>
+                  OFFSET 0x{part.offset.toString(16).toUpperCase()} ·{" "}
+                  {part.size.toLocaleString("en-US")} BYTES
+                </span>
+              </div>
+              <code aria-label={`SHA256 for ${part.path}`}>{part.sha256}</code>
+            </li>
+          ))}
+        </ul>
+      </details>
+    )
+  }
+  <div class="section-divider" id="field-guide">
+    <span>FIELD GUIDE / AFTER INSTALLATION</span><span aria-hidden="true"
+      >↓</span>
+  </div>
+  <FieldGuide release={release} />
+</SiteLayout>

@@ -29,3 +29,11 @@ Thumbs.db
 # Local diagnostics and temporary files
 *.log
 *.tmp
+
+# Astro app and generated release artifacts
+web/node_modules/
+web/.astro/
+web/dist/
+web/public/firmware/
+web/test-results/
+web/playwright-report/
